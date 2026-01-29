@@ -23,7 +23,7 @@ You can install the development version from GitHub:
 install.packages("devtools")
 
 # Install alsi from GitHub
-devtools::install_github("yourusername/alsi")
+devtools::install_github("sekangkim/alsi")
 ```
 
 ## Quick Start
