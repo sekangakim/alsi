@@ -2,26 +2,15 @@
 ## ALSI: Aggregated Latent Space Index for MCA
 ## Refactored version with improved efficiency and JSS standards
 ## =======================================================================
-setwd("/Users/sekangkim/Documents/J Sub/MCA/")
 ## ---- Package Dependencies ----
-#' @importFrom stats complete.cases quantile median svd
+#' @importFrom stats complete.cases quantile median
 #' @importFrom graphics plot lines legend abline boxplot text par
 #' @importFrom utils txtProgressBar setTxtProgressBar
-
+NULL
 ## ---- Utility Functions ----
 
 #' Read Excel file with fallback options
 #' @keywords internal
-.read_xlsx <- function(path) {
-  if (requireNamespace("readxl", quietly = TRUE)) {
-    return(as.data.frame(readxl::read_xlsx(path)))
-  }
-  if (requireNamespace("openxlsx", quietly = TRUE)) {
-    return(as.data.frame(openxlsx::read.xlsx(path)))
-  }
-  stop("Please install 'readxl' or 'openxlsx' to read .xlsx files.")
-}
-
 #' Convert various formats to binary 0/1
 #' @keywords internal
 to01 <- function(x) {
@@ -57,16 +46,6 @@ make_disjunctive <- function(X01) {
   Xd <- do.call(cbind, out)
   storage.mode(Xd) <- "numeric"
   Xd
-}
-
-#' Summarize matrix columns (median and quantiles)
-#' @keywords internal
-summarise_matrix <- function(X, probs = c(0.05, 0.95)) {
-  t(apply(X, 2, function(x) {
-    c(median = median(x, na.rm = TRUE),
-      setNames(quantile(x, probs = probs, na.rm = TRUE), 
-               paste0("p", probs * 100)))
-  }))
 }
 
 ## ---- Core MCA Engine ----
@@ -750,152 +729,3 @@ alsi_workflow <- function(path,
     K = K
   ))
 }
-
-## ==============================
-## Complete ALSI Workflow Example
-## Using ANR2.xlsx data
-## ==============================
-
-# Source the refactored ALSI functions
-# source("alsi_refactored.R")
-
-# Define variables for MCA
-vars <- c("MDD", "DYS", "DEP", "PTSD", "OCD", "GAD", "ANX", "SOPH", "ADHD")
-
-# Run complete workflow
-results <- alsi_workflow(
-  path = "ANR2.xlsx",
-  vars = vars,
-  B_pa = 2000,
-  B_boot = 2000
-)
-
-# Extract ALSI values
-alpha_values <- results$alsi$alpha
-
-# Load data for downstream analysis
-dat <- readxl::read_xlsx("ANR2.xlsx")
-
-# Add ALSI to dataset
-stopifnot(nrow(dat) == length(alpha_values))
-dat$alpha <- alpha_values
-
-## ========================================
-## Downstream Analysis Examples
-## ========================================
-
-# Note: Column names are lowercase: pre_bmi, post_bmi, pre_EDI, post_EDI
-
-## Example 1: BMI model
-cat("\n========================================\n")
-cat("Example 1: BMI Model\n")
-cat("========================================\n")
-
-# Complete cases only for BMI
-dat_bmi <- dat[complete.cases(dat[, c("pre_bmi", "post_bmi", "alpha")]), ]
-cat("N =", nrow(dat_bmi), "with complete BMI data\n\n")
-
-fit_bmi <- lm(post_bmi ~ pre_bmi + alpha, data = dat_bmi)
-summary(fit_bmi)
-
-## Example 2: EDI model  
-cat("\n========================================\n")
-cat("Example 2: EDI Model\n")
-cat("========================================\n")
-
-# Complete cases only for EDI
-dat_edi <- dat[complete.cases(dat[, c("pre_EDI", "post_EDI", "alpha")]), ]
-cat("N =", nrow(dat_edi), "with complete EDI data\n\n")
-
-fit_edi <- lm(post_EDI ~ pre_EDI + alpha, data = dat_edi)
-summary(fit_edi)
-
-## Example 3: ALSI descriptives by diagnosis groups
-cat("\n========================================\n")
-cat("Example 3: ALSI by MDD Status\n")
-cat("========================================\n")
-
-cat("\nALSI Summary Statistics:\n")
-cat("Overall:\n")
-print(summary(dat$alpha))
-
-cat("\nBy MDD status:\n")
-cat("MDD = 0 (No MDD):\n")
-print(summary(dat$alpha[dat$MDD == 0]))
-
-cat("\nMDD = 1 (MDD present):\n")
-print(summary(dat$alpha[dat$MDD == 1]))
-
-# t-test
-t_result <- t.test(alpha ~ MDD, data = dat)
-cat("\nt-test (MDD vs no MDD):\n")
-print(t_result)
-
-## Example 4: Visualize ALSI distribution
-cat("\n========================================\n")
-cat("Example 4: ALSI Distribution\n")
-cat("========================================\n")
-
-# Histogram
-hist(dat$alpha, 
-     breaks = 30,
-     main = "Distribution of ALSI",
-     xlab = "ALSI (Aggregated Latent Space Index)",
-     col = "lightblue",
-     border = "darkblue")
-abline(v = median(dat$alpha), col = "red", lwd = 2, lty = 2)
-legend("topright", 
-       legend = paste("Median =", round(median(dat$alpha), 3)),
-       col = "red", lty = 2, lwd = 2, bty = "n")
-
-# Boxplot by MDD
-boxplot(alpha ~ MDD, 
-        data = dat,
-        main = "ALSI by MDD Status",
-        xlab = "MDD (0 = No, 1 = Yes)",
-        ylab = "ALSI",
-        col = c("lightgreen", "lightcoral"),
-        border = c("darkgreen", "darkred"))
-
-## Example 5: Correlation with pre-treatment severity
-cat("\n========================================\n")
-cat("Example 5: ALSI Correlations\n")
-cat("========================================\n")
-
-cat("\nCorrelation with pre-treatment EDI:\n")
-cor_edi <- cor.test(dat$alpha, dat$pre_EDI)
-print(cor_edi)
-
-cat("\nCorrelation with pre-treatment BMI:\n")
-cor_bmi <- cor.test(dat$alpha, dat$pre_bmi)
-print(cor_bmi)
-
-## Example 6: Multiple regression with diagnostic variables
-cat("\n========================================\n")
-cat("Example 6: Multiple Regression\n")
-cat("========================================\n")
-
-# Predict post-EDI from pre-EDI, ALSI, and other diagnoses
-fit_full <- lm(post_EDI ~ pre_EDI + alpha + MDD + DYS + PTSD + OCD + GAD + ANX, 
-               data = dat)
-summary(fit_full)
-
-fit_alpha <- lm(post_EDI ~ pre_EDI + alpha, 
-               data = dat)
-summary(fit_alpha)
-## Save results
-cat("\n========================================\n")
-cat("Saving Results\n")
-cat("========================================\n")
-
-# Save dataset with ALSI
-write.csv(dat, "ANR2_with_ALSI.csv", row.names = FALSE)
-cat("Dataset with ALSI saved to: ANR2_with_ALSI.csv\n")
-
-# Save ALSI object
-saveRDS(results, "alsi_results.rds")
-cat("Full results object saved to: alsi_results.rds\n")
-
-cat("\n========================================\n")
-cat("Analysis Complete!\n")
-cat("========================================\n")

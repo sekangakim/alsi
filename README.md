@@ -1,126 +1,185 @@
-# ALSI: Aggregated Latent Space Index for Multiple Correspondence Analysis
+# alsi: Aggregated Latent Space Index
 
-[![License: GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/sekangakim/alsi/workflows/R-CMD-check/badge.svg)](https://github.com/sekangakim/alsi/actions)
+[![CRAN status](https://www.r-pkg.org/badges/version/alsi)](https://CRAN.R-project.org/package=alsi)
+<!-- badges: end -->
 
 ## Overview
 
-The `alsi` package provides tools for stability-validated aggregation in Multiple Correspondence Analysis (MCA). It addresses the challenge of dimensional multiplicity by computing the Aggregated Latent Space Index (ALSI), a person-level summary measure derived from validated MCA dimensions.
+The **alsi** package provides stability-validated methods for quantifying individual differences in multivariate profile differentiation across both categorical and continuous data.
 
-## Features
+### Key Features
 
-- **Parallel Analysis**: Automated dimensionality assessment for MCA
-- **Bootstrap Stability Diagnostics**: Subspace and dimension-level reproducibility testing
-- **ALSI Computation**: Variance-weighted aggregation across stable dimensions
-- **Visualization Tools**: Diagnostic plots and category projections
-- **Complete Workflow**: Automated pipeline from data to interpretation
+- **ALSI** for categorical/binary data (via Multiple Correspondence Analysis)
+- **cALSI** for continuous data (via ipsatized Singular Value Decomposition)
+- Three-stage validation pipeline:
+  1. Parallel analysis (dimensionality assessment)
+  2. Procrustes principal angles (space-level stability)
+  3. Tucker's congruence coefficients (dimension-level stability)
+- Variance-weighted aggregation across validated dimensions
+- Complete workflows with diagnostic plots
 
 ## Installation
 
-You can install the development version from GitHub:
+### Development version from GitHub
 
 ```r
-# Install devtools if needed
-install.packages("devtools")
+# install.packages("devtools")
+devtools::install_github("sekangakim/alsi")
+```
 
-# Install alsi from GitHub
-devtools::install_github("sekangkim/alsi")
+### CRAN version (when available)
+
+```r
+install.packages("alsi")
 ```
 
 ## Quick Start
 
+### For Categorical Data (ALSI)
+
 ```r
 library(alsi)
 
-# Load example data
-data(ANR2)
-vars <- c("MDD", "DYS", "DEP", "PTSD", "OCD", "GAD", "ANX", "SOPH", "ADHD")
+# Example: Binary survey data
+data("tutorial_personality")  # Built-in example data
 
-# Run complete workflow
+# Complete workflow
 results <- alsi_workflow(
-  data = ANR2,
-  vars = vars,
-  B_pa = 2000,      # Parallel analysis permutations
-  B_boot = 2000,    # Bootstrap resamples
-  seed = 20260123
+  path = personality_items,
+  vars = c("item1", "item2", "item3", ...),
+  B_pa = 2000,      # Parallel analysis iterations
+  B_boot = 2000     # Bootstrap samples
 )
 
-# Extract ALSI values
-alpha_values <- results$alsi$alpha
+# Extract ALSI values (alpha_i)
+alpha_i <- results$alsi$alpha
 
-# View results
-summary(alpha_values)
+# Use in subsequent analysis
+model <- lm(outcome ~ alpha_i + covariates, data = mydata)
 ```
 
-## Main Functions
-
-| Function | Purpose |
-|----------|---------|
-| `mca_pa()` | Parallel analysis for dimensionality assessment |
-| `mca_bootstrap()` | Bootstrap-based subspace stability diagnostics |
-| `alsi()` | Compute Aggregated Latent Space Index |
-| `mca_align()` | Procrustes alignment of MCA solutions |
-| `plot_subspace_stability()` | Visualize stability diagnostics |
-| `plot_category_projections()` | Visualize category coordinates |
-| `alsi_workflow()` | Automated complete workflow |
-
-## Example: Step-by-Step Analysis
+### For Continuous Data (cALSI)
 
 ```r
-# Step 1: Parallel analysis
-pa <- mca_pa(data = ANR2, vars = vars, B = 2000, q = 0.95)
-K <- pa$K_star  # Number of dimensions to retain
+library(alsi)
 
-# Step 2: Bootstrap stability assessment
-boot <- mca_bootstrap(data = ANR2, vars = vars, K = K, B = 2000)
-plot_subspace_stability(boot)
+# Example: Cognitive test scores
+data("tutorial_cognitive")  # Built-in example data
 
-# Step 3: Compute ALSI
-fit <- boot$ref
-alsi_obj <- alsi(fit$F, fit$eig, K = K)
+# Complete workflow
+results <- calsi_workflow(
+  data = test_scores,  # N x p matrix of continuous scores
+  B_pa = 2000,
+  B_boot = 2000
+)
 
-# Step 4: Examine category projections
-plot_category_projections(fit, K = K, alpha_vec = alsi_obj$alpha_vec)
+# Extract cALSI values (alpha_i)
+alpha_i <- results$calsi$alpha
 
-# Step 5: Use in downstream analyses
-ANR2$alpha <- alsi_obj$alpha
-model <- lm(outcome ~ predictor + alpha, data = ANR2)
-summary(model)
+# Use in subsequent analysis
+model <- lm(outcome ~ alpha_i + age + gender, data = mydata)
 ```
+
+## What is Profile Differentiation?
+
+Profile differentiation quantifies how much an individual's scores vary across multiple dimensions, independent of their overall elevation (mean level).
+
+**Example:** Two individuals with the same mean IQ (M = 100) can have vastly different profiles:
+- **Flat profile** (low α): All scores near 100 (VCI=100, PRI=100, WMI=100, PSI=100)
+- **Differentiated profile** (high α): Large peaks and valleys (VCI=130, PRI=115, WMI=90, PSI=75)
+
+cALSI/ALSI captures this differentiation as a single, interpretable index.
+
+## When to Use ALSI vs. cALSI
+
+| Data Type | Method | Function | Example |
+|-----------|--------|----------|---------|
+| **Binary** | ALSI | `alsi()` | Yes/No survey items |
+| **Ordinal** | ALSI | `alsi()` | Likert scales (1-5, 1-7) |
+| **Nominal** | ALSI | `alsi()` | Categorical responses |
+| **Continuous** | cALSI | `calsi()` | Test scores, ratings, RT |
+| **Mixed** | Both | Compare results | Use judgment based on majority type |
+
+## The ALSI Framework
+
+Both ALSI and cALSI follow the same logic:
+
+1. **Extract latent dimensions** (MCA for categorical, SVD for continuous)
+2. **Validate stability** via bootstrap (Tucker's φ, principal angles)
+3. **Aggregate** person coordinates using variance weighting:
+
+$$\alpha_i = \sqrt{\sum_{k=1}^{K} w_k f_{ik}^2}$$
+
+where:
+- *f_ik* = person *i*'s coordinate on dimension *k*
+- *w_k* = variance weight (proportion of explained variance)
+- *K* = number of validated dimensions
+
+## Key Advantages
+
+### Over Traditional Approaches
+
+- **vs. Single dimensions**: Aggregates across all meaningful dimensions
+- **vs. Biplots**: Principled aggregation when K > 2 or K is odd
+- **vs. Cluster analysis**: Preserves continuous variation
+- **vs. Mahalanobis D²**: No need to specify reference profile
+
+### Unique Features
+
+- ✅ **Stability validation**: Only stable dimensions are aggregated
+- ✅ **Variance weighting**: Dimensions weighted by importance
+- ✅ **Continuous output**: Single index per person for downstream analysis
+- ✅ **Interpretable**: Geometric distance from centroid in pattern space
+
+## Documentation
+
+- Full tutorials: `vignette("alsi-tutorial")` and `vignette("calsi-tutorial")`
+- Function reference: `help(package = "alsi")`
+- Methodological papers:
+  - ALSI (categorical): Kim (under review), *Psychological Methods*
+  - cALSI (continuous): Kim (202X), *Psychological Methods*
 
 ## Citation
 
-If you use this software, please cite:
+If you use this package in your research, please cite:
 
-> Kim, S. (2026). The Aggregated Latent Space Index: Software for Stability-Validated 
-> Aggregation in Multiple Correspondence Analysis. Journal of Statistical Software. 
-> (Submitted)
+```
+Kim, S.-K. (under review). The Aggregated Latent Space Index (ALSI): A 
+stability-validated measure of multivariate profile differentiation for 
+categorical data. Psychological Methods.
 
-## Manuscript
+Kim, S.-K. (202X). The Continuous Aggregated Latent Space Index (cALSI): 
+Extending stability-validated profile aggregation to continuous data. 
+Psychological Methods.
+```
 
-The accompanying manuscript is available at:
-- Preprint: [Link to be added]
-- Journal: Journal of Statistical Software (under review)
+## Getting Help
 
-## Requirements
-
-- R (>= 4.0.0)
-- Optional: `readxl` or `openxlsx` for reading Excel files
+- Bug reports: <https://github.com/sekangakim/alsi/issues>
+- Questions: Open a discussion on GitHub
+- Email: sekang.kim@example.edu
 
 ## License
 
-This package is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.
+GPL (>= 3)
 
-## Author
+## Development
 
-**Se-Kang Kim**  
-Department of Pediatrics  
-Baylor College of Medicine  
-Email: se-kang.kim@bcm.edu  
+This package is under active development. Contributions are welcome!
 
-## Acknowledgments
+```r
+# Run tests
+devtools::test()
 
-Development of this software was supported by research at Baylor College of Medicine.
+# Build documentation
+devtools::document()
 
-## Issues and Contributions
+# Check package
+devtools::check()
+```
 
-If you encounter any issues or have suggestions for improvements, please file an issue on the GitHub repository.
+---
+
+**Maintained by Se-Kang Kim** | [Website](https://example.com) | [GitHub](https://github.com/sekangakim)

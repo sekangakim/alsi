@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github$
+^README\.Rmd$
+^LICENSE\.md$
+^INTEGRATION_GUIDE\.md$
+^\.git$
+^\.gitignore$
+^data-raw$
+^docs$
+^pkgdown$
