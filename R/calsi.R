@@ -4,12 +4,26 @@
 ## Designed to complement SEPA (Segmented Profile Analysis)
 ## =======================================================================
 
+#' @importFrom stats sd cor quantile median complete.cases
+#' @importFrom graphics boxplot abline legend arrows text plot par
+#' @importFrom utils txtProgressBar setTxtProgressBar
+NULL
+
 ## ---- Utility Functions ----
 
 #' Ipsatize (row-center) a matrix
+#' 
+#' Row-centers a data matrix by subtracting each person's mean from their scores.
+#' This removes individual differences in overall level, isolating pattern effects.
+#'
 #' @param X Numeric matrix or data frame (persons x domains)
 #' @return Row-centered matrix where each person's mean is zero
 #' @keywords internal
+#' @examples
+#' \dontrun{
+#' X <- matrix(c(1,2,3, 4,5,6), nrow=2, byrow=TRUE)
+#' ipsatize(X)
+#' }
 ipsatize <- function(X) {
   X <- as.matrix(X)
   sweep(X, 1, rowMeans(X, na.rm = TRUE), "-")
@@ -29,10 +43,30 @@ summarise_matrix <- function(X, probs = c(0.05, 0.95)) {
 
 #' Perform ipsatized SVD on continuous data (SEPA-style)
 #' 
+#' Conducts singular value decomposition on row-centered (ipsatized) continuous data.
+#' This isolates within-person pattern variation from between-person level differences.
+#'
 #' @param X Data frame or matrix with continuous variables (persons x domains)
-#' @param K Number of dimensions to retain (default: all)
-#' @return List containing SVD results with eigenvalues, coordinates
+#' @param K Number of dimensions to retain (default: all available)
+#' @return List of class \code{svd_fit} containing:
+#'   \item{X}{Original data matrix}
+#'   \item{Xstar}{Ipsatized (row-centered) data matrix}
+#'   \item{N}{Number of individuals}
+#'   \item{p}{Number of domains/variables}
+#'   \item{K}{Number of dimensions retained}
+#'   \item{eig}{Eigenvalues (squared singular values)}
+#'   \item{var_explained}{Proportion of variance explained by each dimension}
+#'   \item{svd}{Full SVD object}
+#'   \item{F}{Person coordinates (N x K matrix)}
+#'   \item{B}{Domain loadings (p x K matrix)}
+#'   \item{domains}{Variable names}
 #' @keywords internal
+#' @examples
+#' \dontrun{
+#' data <- matrix(rnorm(100*5), ncol=5)
+#' fit <- svd_ipsatized(data, K=3)
+#' print(fit)
+#' }
 svd_ipsatized <- function(X, K = NULL) {
   X <- as.matrix(X)
   X <- X[complete.cases(X), , drop = FALSE]
@@ -123,7 +157,7 @@ print.svd_fit <- function(x, ...) {
 #' @param q Numeric, centile for retention threshold (default: 0.95)
 #' @param seed Integer, random seed for reproducibility
 #' @param graph Logical, whether to display the scree plot (default: TRUE)
-#' @param verbose Logical, print progress messages
+#' @param verbose Logical, print progress messages (default: TRUE)
 #'
 #' @return S3 object of class \code{svd_pa} containing:
 #'   \item{eig_obs}{Observed eigenvalues}
@@ -135,13 +169,18 @@ print.svd_fit <- function(x, ...) {
 #'
 #' @details
 #' This function primarily uses the paran package, which implements Horn's
-
 #' parallel analysis with the bias adjustment described in Longman, Cota,
 #' Holden, & Fekken (1989). This is the same method used in SEPA.
 #'
-#' The paran package should be installed: install.packages("paran")
+#' The paran package should be installed: \code{install.packages("paran")}
 #'
 #' @export
+#' @examples
+#' \dontrun{
+#' data <- matrix(rnorm(500*10), ncol=10)
+#' pa_result <- svd_pa(data, B=1000, seed=123)
+#' print(pa_result$K_star)
+#' }
 svd_pa <- function(data, 
                    B = 2000, 
                    q = 0.95, 
@@ -252,11 +291,11 @@ svd_pa <- function(data,
     out <- structure(
       list(
         eig_obs = eig_obs_scaled,
-        eig_adj = NULL,
+        eig_adj = eig_obs_scaled,
         eig_rand = eig_q,
         K_star = K_star,
         fit = fit0,
-        method = "fallback (install paran for SEPA compatibility)",
+        method = "fallback",
         q = q,
         B = B
       ),
@@ -264,22 +303,7 @@ svd_pa <- function(data,
     )
     
     if (verbose) {
-      cat("\nParallel Analysis (fallback) complete.\n")
-      cat("Suggested K* =", K_star, "\n")
-      cat("NOTE: Install 'paran' package for exact SEPA compatibility.\n\n")
-    }
-    
-    # Plot
-    if (graph) {
-      Kplot <- min(20, Kmax)
-      plot(1:Kplot, eig_obs_scaled[1:Kplot], 
-           type = "b", pch = 19, col = "black",
-           xlab = "Dimension k", ylab = "Eigenvalue",
-           main = sprintf("Parallel Analysis (fallback, B=%d)", B),
-           ylim = range(c(eig_obs_scaled[1:Kplot], eig_q[1:Kplot])))
-      lines(1:Kplot, eig_q[1:Kplot], type = "b", pch = 1, col = "red")
-      legend("topright", legend = c("Observed", "Random"), 
-             pch = c(19, 1), col = c("black", "red"), bty = "n")
+      cat("\n\nRetained dimensions K* =", K_star, "\n\n")
     }
     
     return(invisible(out))
@@ -290,216 +314,200 @@ svd_pa <- function(data,
 print.svd_pa <- function(x, ...) {
   cat("Parallel Analysis for Ipsatized SVD\n")
   cat("  Method:", x$method, "\n")
-  cat("  Retained dimensions K* =", x$K_star, "\n\n")
-  
-  if (x$method == "paran") {
-    cat("Eigenvalue comparison:\n")
-    top_k <- min(10, length(x$eig_obs))
-    comp <- data.frame(
-      k = 1:top_k,
-      Observed = round(x$eig_obs[1:top_k], 4),
-      Adjusted = round(x$eig_adj[1:top_k], 4),
-      Random = round(x$eig_rand[1:top_k], 4),
-      Retain = ifelse(1:top_k <= x$K_star, "Yes", "No")
-    )
-    print(comp, row.names = FALSE)
-  } else {
-    cat("Eigenvalue comparison:\n")
-    top_k <- min(10, length(x$eig_obs))
-    comp <- data.frame(
-      k = 1:top_k,
-      Observed = round(x$eig_obs[1:top_k], 4),
-      Random = round(x$eig_rand[1:top_k], 4),
-      Retain = ifelse(1:top_k <= x$K_star, "Yes", "No")
-    )
-    print(comp, row.names = FALSE)
-  }
+  cat("  Iterations:", x$B, "\n")
+  cat("  Centile:", x$q, "\n")
+  cat("  Retained dimensions: K* =", x$K_star, "\n")
   invisible(x)
 }
 
-## ========================================================================
-## Procrustes Alignment for Continuous Data
-## ========================================================================
+## =====================================================================
+## Bootstrap Stability Assessment
+## =====================================================================
 
-#' Align SVD solution via Procrustes rotation with sign anchoring
-#'
-#' @param B Matrix of domain loadings to align
-#' @param Bref Reference matrix of domain loadings
-#'
-#' @return List with aligned coordinates and rotation matrix
-#' @export
-svd_align <- function(B, Bref) {
-  B <- as.matrix(B)
-  Bref <- as.matrix(Bref)
-  
-  if (nrow(B) != nrow(Bref) || ncol(B) != ncol(Bref)) {
-    stop("B and Bref must have identical dimensions.")
-  }
-  
-  # Orthogonal Procrustes: minimize ||B R - Bref||_F
-  svp <- svd(crossprod(B, Bref))
-  R <- tcrossprod(svp$u, svp$v)
-  Bal <- B %*% R
-  
-  # Sign anchoring: maximize agreement with reference
-  for (k in seq_len(ncol(Bal))) {
-    if (sum(Bal[, k] * Bref[, k]) < 0) {
-      Bal[, k] <- -Bal[, k]
-      R[, k] <- -R[, k]
-    }
-  }
-  
-  list(B_aligned = Bal, R = R)
+#' Procrustes rotation to align two matrices
+#' @keywords internal
+procrustes_rotation <- function(X, Y) {
+  # Find R such that Y %*% R ~= X
+  # Using SVD: X'Y = UDV', then R = VU'
+  s <- svd(t(X) %*% Y)
+  R <- s$v %*% t(s$u)
+  return(R)
 }
 
-## =====================================================================
-## Bootstrap Stability Assessment for Continuous Data
-## =====================================================================
+#' Principal angles between column spaces of two matrices
+#' @keywords internal
+principal_angles_rad <- function(A, B) {
+  # QR decomposition for orthonormal bases
+  QA <- qr.Q(qr(A))
+  QB <- qr.Q(qr(B))
+  
+  # SVD of Q_A' * Q_B
+  sv <- svd(t(QA) %*% QB, nu = 0, nv = 0)$d
+  
+  # Clamp to [0,1] for numerical stability
+  sv <- pmin(1.0, pmax(0.0, sv))
+  
+  # Return angles in radians
+  acos(sv)
+}
 
-#' Bootstrap-Based Subspace Stability Assessment for Ipsatized SVD
+#' Tucker's congruence coefficient
+#' @keywords internal
+tucker_congruence <- function(x, y) {
+  sum(x * y) / sqrt(sum(x^2) * sum(y^2))
+}
+
+#' Bootstrap Stability Assessment for SVD
 #'
-#' Evaluates reproducibility of retained dimensions via bootstrap resampling.
-#' Uses Procrustes principal angles (subspace-level) and Tucker's congruence
-#' coefficients (dimension-level).
+#' Assesses the stability of SVD dimensions through bootstrap resampling,
+#' computing principal angles and Tucker's congruence coefficients.
 #'
 #' @param data Data frame or matrix of continuous variables
-#' @param K Integer, number of dimensions to assess
-#' @param B Integer, number of bootstrap resamples (default: 2000)
-#' @param seed Integer, random seed for reproducibility
-#' @param verbose Logical, print progress messages
+#' @param K Number of dimensions to assess
+#' @param B Number of bootstrap samples (default: 2000)
+#' @param seed Random seed for reproducibility
+#' @param verbose Logical, print progress (default: TRUE)
 #'
-#' @return S3 object of class \code{svd_bootstrap}
+#' @return S3 object of class \code{svd_bootstrap} containing:
+#'   \item{ref}{Reference SVD fit object}
+#'   \item{angles}{Bootstrap distribution of principal angles (B x K matrix, in degrees)}
+#'   \item{tucker}{Bootstrap distribution of Tucker's phi (B x K matrix)}
+#'   \item{angles_summary}{Summary statistics for angles}
+#'   \item{tucker_summary}{Summary statistics for Tucker's phi}
+#'   \item{K}{Number of dimensions assessed}
+#'   \item{B}{Number of bootstrap samples}
+#'
 #' @export
+#' @examples
+#' \dontrun{
+#' data <- matrix(rnorm(500*10), ncol=10)
+#' boot_result <- svd_bootstrap(data, K=3, B=1000, seed=123)
+#' plot_subspace_stability_cont(boot_result)
+#' }
 svd_bootstrap <- function(data, 
                           K, 
                           B = 2000, 
                           seed = 20260206,
                           verbose = TRUE) {
   
-  # Prepare data
   X <- as.matrix(data)
   X <- X[complete.cases(X), , drop = FALSE]
   N <- nrow(X)
   
   # Reference fit
-  fit_ref <- svd_ipsatized(X, K = K)
+  ref <- svd_ipsatized(X, K = K)
+  V_ref <- ref$svd$v[, 1:K, drop = FALSE]
   
-  if (K < 1 || K > ncol(fit_ref$svd$v)) {
-    stop("K must be between 1 and ", ncol(fit_ref$svd$v))
-  }
-  
-  Vref <- fit_ref$svd$v[, 1:K, drop = FALSE]
-  Bref <- fit_ref$B[, 1:K, drop = FALSE]
-  
-  # Pre-allocate results
-  angles <- matrix(NA_real_, nrow = B, ncol = K)
-  tucker <- matrix(NA_real_, nrow = B, ncol = K)
+  # Storage
+  angles_mat <- matrix(NA_real_, nrow = B, ncol = K)
+  tucker_mat <- matrix(NA_real_, nrow = B, ncol = K)
   
   set.seed(seed)
   
   if (verbose) {
-    cat("Running bootstrap stability assessment with B =", B, "resamples...\n")
+    cat("Bootstrap validation (", B, " iterations)...\n", sep = "")
     pb <- txtProgressBar(0, B, style = 3)
   }
   
   for (b in seq_len(B)) {
-    # Bootstrap resample
-    idx <- sample.int(N, size = N, replace = TRUE)
+    # Resample
+    idx <- sample(N, replace = TRUE)
     Xb <- X[idx, , drop = FALSE]
     
-    # Ipsatize and SVD
-    Xb_star <- ipsatize(Xb)
-    sv_b <- svd(Xb_star)
+    # Fit bootstrap SVD
+    fit_b <- svd_ipsatized(Xb, K = K)
+    V_b <- fit_b$svd$v[, 1:K, drop = FALSE]
     
-    Vb <- sv_b$v[, 1:K, drop = FALSE]
-    Bb <- sv_b$v[, 1:K, drop = FALSE]
+    # Procrustes align bootstrap to reference
+    R <- procrustes_rotation(V_ref, V_b)
+    V_b_aligned <- V_b %*% R
     
-    # Principal angles: measure subspace similarity
-    s <- svd(crossprod(Vref, Vb), nu = 0, nv = 0)$d
-    s <- pmax(pmin(s, 1), -1)  # numerical stability
-    angles[b, ] <- sort(acos(s) * 180 / pi)
+    # Principal angles (in radians, then convert to degrees)
+    angles_rad <- principal_angles_rad(V_ref, V_b_aligned)
+    angles_mat[b, ] <- angles_rad * (180 / pi)
     
-    # Tucker congruence: measure dimension-level similarity (after alignment)
-    Bal <- svd_align(Bb, Bref)$B_aligned
-    tucker[b, ] <- colSums(Bal * Bref) / sqrt(colSums(Bal^2) * colSums(Bref^2))
+    # Tucker's congruence
+    for (k in seq_len(K)) {
+      tucker_mat[b, k] <- tucker_congruence(V_ref[, k], V_b_aligned[, k])
+    }
     
     if (verbose) setTxtProgressBar(pb, b)
   }
   
   if (verbose) close(pb)
   
-  # Label columns
-  colnames(angles) <- paste0("theta", 1:K)
-  colnames(tucker) <- paste0("phi", 1:K)
+  # Summaries
+  angles_summary <- summarise_matrix(angles_mat)
+  tucker_summary <- summarise_matrix(tucker_mat)
   
-  # Summary statistics
-  angles_summary <- summarise_matrix(angles, probs = c(0.05, 0.95))
-  tucker_summary <- summarise_matrix(tucker, probs = c(0.05, 0.95))
+  rownames(angles_summary) <- paste0("Dim", 1:K)
+  rownames(tucker_summary) <- paste0("Dim", 1:K)
   
-  out <- structure(
+  structure(
     list(
-      ref = fit_ref,
-      K = K,
-      B = B,
-      angles = angles,
-      tucker = tucker,
+      ref = ref,
+      angles = angles_mat,
+      tucker = tucker_mat,
       angles_summary = angles_summary,
-      tucker_summary = tucker_summary
+      tucker_summary = tucker_summary,
+      K = K,
+      B = B
     ),
     class = "svd_bootstrap"
   )
-  
-  if (verbose) {
-    cat("\n\n--- Principal Angles (degrees) ---\n")
-    print(round(angles_summary, 2))
-    cat("\n--- Tucker Congruence Coefficients ---\n")
-    print(round(tucker_summary, 3))
-    cat("\nInterpretation: phi >= 0.95 excellent, >= 0.85 good, >= 0.65 fair\n")
-  }
-  
-  invisible(out)
 }
 
 #' @export
 print.svd_bootstrap <- function(x, ...) {
-  cat("Ipsatized SVD Bootstrap Stability Assessment\n")
+  cat("Bootstrap Stability Assessment (Continuous Data)\n")
   cat("  K =", x$K, "dimensions\n")
-  cat("  B =", x$B, "bootstrap resamples\n\n")
+  cat("  B =", x$B, "bootstrap samples\n\n")
   
   cat("Principal Angles (degrees):\n")
   print(round(x$angles_summary, 2))
+  cat("\n")
   
-  cat("\nTucker Congruence:\n")
+  cat("Tucker's Congruence:\n")
   print(round(x$tucker_summary, 3))
   
   invisible(x)
 }
 
-#' @export
-plot.svd_bootstrap <- function(x, ...) {
-  plot_subspace_stability_cont(x)
-}
+## =====================================================================
+## cALSI Index Computation
+## =====================================================================
 
-## ===============================================================
-## cALSI Computation
-## ===============================================================
-
-#' Compute Continuous Aggregated Latent Space Index (cALSI)
+#' Compute cALSI (Continuous Aggregated Latent Space Index)
 #'
-#' Calculates cALSI as a variance-weighted Euclidean norm of row coordinates
-#' within a retained K-dimensional ipsatized SVD subspace.
+#' Computes individual-level profile differentiation indices as variance-weighted
+#' Euclidean norms in the validated latent space.
 #'
-#' @param F Matrix of row coordinates (N x K or larger)
+#' @param F Matrix of person coordinates (N x K)
 #' @param eig Vector of eigenvalues
-#' @param K Integer, number of dimensions to aggregate
+#' @param K Number of dimensions to use
 #'
 #' @return S3 object of class \code{calsi} containing:
-#'   \item{alpha}{Numeric vector of cALSI values (length N)}
-#'   \item{w}{Variance weights (length K)}
-#'   \item{alpha_vec}{Aggregated direction vector (sqrt of weights)}
+#'   \item{alpha}{Vector of cALSI values (length N)}
+#'   \item{w}{Variance weights for each dimension}
+#'   \item{alpha_vec}{Square root of variance weights}
 #'   \item{K}{Number of dimensions used}
+#'   \item{eig}{Eigenvalues used}
+#'
+#' @details
+#' cALSI values are computed as:
+#' \deqn{\alpha_i = \sqrt{\sum_{k=1}^{K} w_k f_{ik}^2}}
+#' where \eqn{w_k = \lambda_k / \sum_{k=1}^{K} \lambda_k} are variance weights.
+#'
+#' Higher values indicate more differentiated (non-flat) profiles.
 #'
 #' @export
+#' @examples
+#' \dontrun{
+#' data <- matrix(rnorm(500*10), ncol=10)
+#' fit <- svd_ipsatized(data, K=3)
+#' calsi_result <- calsi(fit$F, fit$eig, K=3)
+#' summary(calsi_result$alpha)
+#' }
 calsi <- function(F, eig, K) {
   F <- as.matrix(F)
   
@@ -521,7 +529,8 @@ calsi <- function(F, eig, K) {
       alpha = alpha_vals,
       w = w,
       alpha_vec = alpha_vec,
-      K = K
+      K = K,
+      eig = eig[1:K]
     ),
     class = "calsi"
   )
@@ -544,7 +553,26 @@ print.calsi <- function(x, ...) {
 #' @export
 summary.calsi <- function(object, ...) {
   cat("cALSI Summary Statistics\n")
+  cat("========================\n\n")
+  
+  cat("Sample size: N =", length(object$alpha), "\n")
+  cat("Dimensions: K =", object$K, "\n\n")
+  
+  cat("Distribution:\n")
   print(summary(object$alpha))
+  cat("\nSD:", round(sd(object$alpha), 4), "\n")
+  
+  if (requireNamespace("moments", quietly = TRUE)) {
+    cat("Skewness:", round(moments::skewness(object$alpha), 3), "\n")
+    cat("Kurtosis:", round(moments::kurtosis(object$alpha), 3), "\n")
+  }
+  
+  cat("\nVariance Weights:\n")
+  for (k in 1:object$K) {
+    cat(sprintf("  Dim %d: w = %.4f (%.1f%%)\n", 
+                k, object$w[k], object$w[k] * 100))
+  }
+  
   invisible(object)
 }
 
@@ -554,8 +582,17 @@ summary.calsi <- function(object, ...) {
 
 #' Plot Subspace Stability Diagnostics for Continuous Data
 #'
+#' Creates side-by-side boxplots of principal angles and Tucker's congruence
+#' from bootstrap stability assessment.
+#'
 #' @param boot_obj Object of class \code{svd_bootstrap}
 #' @export
+#' @examples
+#' \dontrun{
+#' data <- matrix(rnorm(500*10), ncol=10)
+#' boot_result <- svd_bootstrap(data, K=3, B=1000)
+#' plot_subspace_stability_cont(boot_result)
+#' }
 plot_subspace_stability_cont <- function(boot_obj) {
   if (!inherits(boot_obj, "svd_bootstrap")) {
     stop("boot_obj must be of class 'svd_bootstrap'")
@@ -575,6 +612,10 @@ plot_subspace_stability_cont <- function(boot_obj) {
           col = "lightblue",
           border = "darkblue")
   abline(h = 0, lty = 2, col = "gray50")
+  abline(h = 10, lty = 2, col = "orange")
+  legend("topright", 
+         legend = "θ = 10° threshold",
+         lty = 2, col = "orange", bty = "n", cex = 0.8)
   
   # Tucker congruence boxplot
   boxplot(tucker, 
@@ -586,7 +627,7 @@ plot_subspace_stability_cont <- function(boot_obj) {
           border = "darkgreen")
   abline(h = c(0.85, 0.95), lty = 2, col = c("orange", "red"))
   legend("bottomright", 
-         legend = c("phi = 0.85 (good)", "phi = 0.95 (excellent)"),
+         legend = c("φ = 0.85 (good)", "φ = 0.95 (excellent)"),
          lty = 2, col = c("orange", "red"), bty = "n", cex = 0.8)
   
   invisible(NULL)
@@ -597,9 +638,15 @@ plot_subspace_stability_cont <- function(boot_obj) {
 #' Visualizes domain loadings in a 2D subspace (biplot-style).
 #'
 #' @param fit SVD fit object (class \code{svd_fit})
-#' @param dim_pair Integer vector of length 2, dimensions to plot
-#' @param cex Character expansion for labels
+#' @param dim_pair Integer vector of length 2, dimensions to plot (default: c(1,2))
+#' @param cex Character expansion for labels (default: 1.0)
 #' @export
+#' @examples
+#' \dontrun{
+#' data <- matrix(rnorm(500*10), ncol=10)
+#' fit <- svd_ipsatized(data, K=3)
+#' plot_domain_loadings(fit, dim_pair=c(1,2))
+#' }
 plot_domain_loadings <- function(fit, 
                                  dim_pair = c(1, 2),
                                  cex = 1.0) {
@@ -651,76 +698,176 @@ plot_domain_loadings <- function(fit,
 
 #' Complete cALSI Workflow for Continuous Data
 #'
-#' Integrates parallel analysis, bootstrap stability, and cALSI computation.
+#' Integrates parallel analysis, bootstrap stability assessment, and cALSI
+#' computation into a single streamlined workflow.
 #'
-#' @param data Data frame or matrix of continuous variables
-#' @param B_pa Number of permutations for parallel analysis
-#' @param B_boot Number of bootstrap resamples
-#' @param q Quantile for parallel analysis
-#' @param seed Random seed
-#' @param K_override Optional: override parallel analysis K* with specified value
+#' @param data Data frame or matrix of continuous variables (persons x domains)
+#' @param B_pa Number of permutations for parallel analysis (default: 2000)
+#' @param B_boot Number of bootstrap resamples for stability (default: 2000)
+#' @param phi_threshold Tucker's congruence threshold for stability (default: 0.85)
+#' @param angle_threshold Principal angle threshold in degrees (default: 10)
+#' @param ipsatize Logical, whether to ipsatize data (default: TRUE; always recommended)
+#' @param q Quantile for parallel analysis (default: 0.95)
+#' @param seed Random seed for reproducibility (default: 20260206)
+#' @param K_override Optional integer to override parallel analysis K* with specified value
+#' @param verbose Logical, print progress messages (default: TRUE)
 #'
-#' @return List containing all analysis objects
+#' @return List containing all analysis objects:
+#'   \item{pa}{Parallel analysis results (class \code{svd_pa})}
+#'   \item{boot}{Bootstrap stability results (class \code{svd_bootstrap})}
+#'   \item{ref}{Reference SVD fit (class \code{svd_fit})}
+#'   \item{calsi}{cALSI results (class \code{calsi})}
+#'   \item{K}{Final number of dimensions used}
+#'   \item{domain_contrib}{Domain contributions to retained subspace (percentages)}
+#'
+#' @details
+#' This function executes the complete cALSI pipeline:
+#' 
+#' 1. **Parallel Analysis**: Determines initial dimensionality K* using permutation-based
+#'    parallel analysis (paran package if available, fallback otherwise)
+#' 
+#' 2. **Bootstrap Stability**: Assesses stability of K dimensions via B bootstrap resamples,
+#'    computing principal angles (subspace-level stability) and Tucker's congruence
+#'    (dimension-level stability)
+#' 
+#' 3. **cALSI Computation**: Calculates individual profile differentiation indices as
+#'    variance-weighted Euclidean norms across the K validated dimensions
+#' 
+#' 4. **Diagnostics**: Displays stability plots and domain contribution summaries
+#'
 #' @export
+#' @examples
+#' \dontrun{
+#' # Generate simulated data
+#' set.seed(123)
+#' data <- matrix(rnorm(500*10, mean=50, sd=10), ncol=10)
+#' colnames(data) <- paste0("Domain", 1:10)
+#' 
+#' # Run complete workflow
+#' result <- calsi_workflow(data, B_pa=1000, B_boot=1000, seed=123)
+#' 
+#' # Extract cALSI values
+#' alpha_i <- result$calsi$alpha
+#' summary(alpha_i)
+#' }
 calsi_workflow <- function(data,
                            B_pa = 2000,
                            B_boot = 2000,
+                           phi_threshold = 0.85,
+                           angle_threshold = 10,
+                           ipsatize = TRUE,
                            q = 0.95,
                            seed = 20260206,
-                           K_override = NULL) {
+                           K_override = NULL,
+                           verbose = TRUE) {
   
-  cat("========================================\n")
-  cat("cALSI Workflow (Continuous Data)\n")
-  cat("========================================\n\n")
+  if (!ipsatize) {
+    warning("ipsatize=FALSE not recommended. cALSI is designed for ipsatized data.")
+  }
+  
+  if (verbose) {
+    cat("========================================\n")
+    cat("cALSI Workflow (Continuous Data)\n")
+    cat("========================================\n\n")
+  }
   
   # Step 1: Parallel analysis
-  cat("Step 1: Parallel Analysis\n")
-  cat("----------------------------------------\n")
-  pa <- svd_pa(data, B = B_pa, q = q, seed = seed, verbose = TRUE)
-  K <- if (!is.null(K_override)) K_override else pa$K_star
-  cat("Using K =", K, "dimensions\n")
+  if (verbose) {
+    cat("Step 1: Parallel Analysis\n")
+    cat("----------------------------------------\n")
+  }
   
-  cat("\n\n")
+  pa <- svd_pa(data, B = B_pa, q = q, seed = seed, 
+               graph = TRUE, verbose = verbose)
+  
+  K <- if (!is.null(K_override)) {
+    if (verbose) cat("Using user-specified K =", K_override, "\n")
+    K_override
+  } else {
+    if (verbose) cat("Retained dimensions K* =", pa$K_star, "\n")
+    pa$K_star
+  }
+  
+  if (verbose) cat("\n")
   
   # Step 2: Bootstrap stability
-  cat("Step 2: Bootstrap Stability Assessment\n")
-  cat("----------------------------------------\n")
-  boot <- svd_bootstrap(data, K = K, B = B_boot, seed = seed, verbose = TRUE)
-  plot_subspace_stability_cont(boot)
+  if (verbose) {
+    cat("Step 2: Bootstrap Stability Assessment\n")
+    cat("----------------------------------------\n")
+  }
   
-  cat("\n\n")
+  boot <- svd_bootstrap(data, K = K, B = B_boot, seed = seed, verbose = verbose)
+  
+  if (verbose) {
+    cat("\n")
+    plot_subspace_stability_cont(boot)
+    cat("\n")
+  }
+  
+  # Check stability criteria
+  if (verbose) {
+    cat("Stability Criteria:\n")
+    cat("  Angle threshold: θ < ", angle_threshold, "°\n", sep = "")
+    cat("  Tucker threshold: φ ≥ ", phi_threshold, "\n\n", sep = "")
+    
+    angles_med <- apply(boot$angles, 2, median)
+    tucker_med <- apply(boot$tucker, 2, median)
+    
+    cat("Median Stability Diagnostics:\n")
+    for (k in 1:K) {
+      meets_angle <- angles_med[k] < angle_threshold
+      meets_tucker <- tucker_med[k] >= phi_threshold
+      status <- if (meets_angle && meets_tucker) "✓" else "✗"
+      cat(sprintf("  Dim %d: θ = %5.2f°, φ = %.3f %s\n", 
+                  k, angles_med[k], tucker_med[k], status))
+    }
+    cat("\n")
+  }
   
   # Step 3: cALSI computation
-  cat("Step 3: cALSI Computation\n")
-  cat("----------------------------------------\n")
-  fit <- boot$ref
-  calsi_obj <- calsi(fit$F, fit$eig, K = K)
-  print(calsi_obj)
+  if (verbose) {
+    cat("Step 3: cALSI Computation\n")
+    cat("----------------------------------------\n")
+  }
   
-  cat("\n\n")
+  ref <- boot$ref
+  calsi_obj <- calsi(ref$F, ref$eig, K = K)
   
-  # Step 4: Domain loadings plot
-  cat("Step 4: Domain Loadings\n")
-  cat("----------------------------------------\n")
-  if (K >= 2) {
-    plot_domain_loadings(fit, dim_pair = c(1, 2))
+  if (verbose) {
+    print(calsi_obj)
+    cat("\n")
+  }
+  
+  # Step 4: Domain loadings
+  if (verbose) {
+    cat("Step 4: Domain Loadings\n")
+    cat("----------------------------------------\n")
+  }
+  
+  if (K >= 2 && verbose) {
+    plot_domain_loadings(ref, dim_pair = c(1, 2))
   }
   
   # Domain contributions (variance explained per domain)
-  B <- fit$B[, 1:K, drop = FALSE]
-  domain_var <- rowSums(B^2)
+  B_mat <- ref$B[, 1:K, drop = FALSE]
+  domain_var <- rowSums(B_mat^2)
   domain_contrib <- domain_var / sum(domain_var) * 100
-  cat("\nDomain contributions to retained subspace:\n")
-  print(round(sort(domain_contrib, decreasing = TRUE), 2))
   
-  cat("\n========================================\n")
-  cat("Workflow complete!\n")
-  cat("========================================\n")
+  if (verbose) {
+    cat("\nDomain contributions to retained subspace:\n")
+    contrib_sorted <- sort(domain_contrib, decreasing = TRUE)
+    for (i in 1:length(contrib_sorted)) {
+      cat(sprintf("  %s: %.1f%%\n", names(contrib_sorted)[i], contrib_sorted[i]))
+    }
+    cat("\n========================================\n")
+    cat("Workflow complete!\n")
+    cat("========================================\n")
+  }
   
   invisible(list(
     pa = pa,
     boot = boot,
-    fit = fit,
+    ref = ref,
     calsi = calsi_obj,
     K = K,
     domain_contrib = domain_contrib
@@ -733,12 +880,20 @@ calsi_workflow <- function(data,
 
 #' Compare SEPA plane-wise summaries with cALSI
 #'
-#' @param fit SVD fit object
+#' Compares SEPA's plane-wise indices with cALSI's unified index.
+#'
+#' @param fit SVD fit object (class \code{svd_fit})
 #' @param K Number of dimensions
 #' @param target_ids Optional vector of person IDs to highlight
 #'
 #' @return Data frame comparing SEPA and cALSI person-level indices
 #' @export
+#' @examples
+#' \dontrun{
+#' data <- matrix(rnorm(500*10), ncol=10)
+#' fit <- svd_ipsatized(data, K=4)
+#' comparison <- compare_sepa_calsi(fit, K=4, target_ids=c(1,50,100))
+#' }
 compare_sepa_calsi <- function(fit, K, target_ids = NULL) {
   
   F_mat <- fit$F[, 1:K, drop = FALSE]
@@ -811,13 +966,21 @@ compare_sepa_calsi <- function(fit, K, target_ids = NULL) {
 
 #' Demonstrate what cALSI adds beyond SEPA
 #'
-#' @param data Data matrix
-#' @param K Number of dimensions
-#' @param B_boot Bootstrap samples for stability
-#' @param seed Random seed
+#' Provides a comprehensive comparison showing the advantages of cALSI's
+#' stability-validated approach over traditional SEPA analysis.
+#'
+#' @param data Data matrix (persons x domains)
+#' @param K Number of dimensions (default: 4)
+#' @param B_boot Bootstrap samples for stability (default: 2000)
+#' @param seed Random seed (default: 20260206)
 #'
 #' @return List with comparison results
 #' @export
+#' @examples
+#' \dontrun{
+#' data <- matrix(rnorm(500*10), ncol=10)
+#' demo_results <- calsi_vs_sepa_demo(data, K=4, B_boot=1000)
+#' }
 calsi_vs_sepa_demo <- function(data, K = 4, B_boot = 2000, seed = 20260206) {
   
   cat("\n=====================================================\n")
