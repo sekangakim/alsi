@@ -12,12 +12,12 @@ plot_subspace_stability(boot_obj)
 \item{boot_obj}{Object of class \code{mca_bootstrap}}
 }
 \value{
-No return value, called for side effects. The function creates
-a two-panel figure with: (1) boxplots of principal angles (left panel),
-showing the distribution of subspace similarity across bootstrap resamples
-for each dimension; and (2) boxplots of Tucker congruence coefficients
-(right panel), showing dimension-level replicability with reference lines
-at phi = 0.85 (good) and phi = 0.95 (excellent).
+No return value, called for side effects. The function creates 
+  a two-panel figure with: (1) boxplots of principal angles (left panel), 
+  showing the distribution of subspace similarity across bootstrap resamples 
+  for each dimension; and (2) boxplots of Tucker congruence coefficients 
+  (right panel), showing dimension-level replicability with reference lines 
+  at phi = 0.85 (good) and phi = 0.95 (excellent).
 }
 \description{
 Creates diagnostic plots showing distributions of principal angles

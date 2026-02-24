@@ -17,16 +17,16 @@ calsi(F, eig, K)
 }
 \value{
 S3 object of class \code{calsi} containing:
-\item{alpha}{Numeric vector of cALSI values (length N)}
-\item{w}{Variance weights (length K)}
-\item{alpha_vec}{Aggregated direction vector (sqrt of weights)}
-\item{K}{Number of dimensions used}
+  \item{alpha}{Numeric vector of cALSI values (length N)}
+  \item{w}{Variance weights (length K)}
+  \item{alpha_vec}{Aggregated direction vector (sqrt of weights)}
+  \item{K}{Number of dimensions used}
 
 S3 object of class \code{calsi} containing:
-\item{alpha}{Numeric vector of cALSI values (length N)}
-\item{w}{Variance weights (length K)}
-\item{alpha_vec}{Aggregated direction vector (sqrt of weights)}
-\item{K}{Number of dimensions used}
+  \item{alpha}{Numeric vector of cALSI values (length N)}
+  \item{w}{Variance weights (length K)}
+  \item{alpha_vec}{Aggregated direction vector (sqrt of weights)}
+  \item{K}{Number of dimensions used}
 }
 \description{
 Calculates cALSI as a variance-weighted Euclidean norm of row coordinates

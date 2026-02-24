@@ -36,11 +36,11 @@ plot_category_projections(
 \item{top_n}{Number of top categories to display by projection (default: 15)}
 }
 \value{
-No return value, called for side effects. The function creates
-a scatter plot of category coordinates in the specified 2D subspace,
-with category labels displayed. If \code{alpha_vec} is provided, it also
-prints the top categories ranked by their absolute projection onto the
-ALSI direction to the console.
+No return value, called for side effects. The function creates 
+  a scatter plot of category coordinates in the specified 2D subspace, 
+  with category labels displayed. If \code{alpha_vec} is provided, it also 
+  prints the top categories ranked by their absolute projection onto the 
+  ALSI direction to the console.
 }
 \description{
 Visualizes category coordinates in a 2D MCA subspace and optionally

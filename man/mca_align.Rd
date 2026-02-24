@@ -17,12 +17,12 @@ mca_align(G, Gref)
 List with aligned coordinates and rotation matrix
 
 List containing:
-\item{G_aligned}{Matrix of aligned category coordinates (M x K),
-rotated and sign-corrected to match the reference}
-\item{R}{Orthogonal rotation matrix (K x K) used for alignment}
+  \item{G_aligned}{Matrix of aligned category coordinates (M x K), 
+    rotated and sign-corrected to match the reference}
+  \item{R}{Orthogonal rotation matrix (K x K) used for alignment}
 }
 \description{
-Performs orthogonal Procrustes rotation to align a set of category
+Performs orthogonal Procrustes rotation to align a set of category 
 coordinates to a reference solution, then applies sign correction to
 maximize agreement with the reference on each dimension.
 }

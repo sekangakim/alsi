@@ -41,11 +41,11 @@ alsi_workflow(
 List containing all analysis objects
 
 List (returned invisibly) containing all analysis objects:
-\item{pa}{Parallel analysis results (class \code{mca_pa})}
-\item{boot}{Bootstrap stability results (class \code{mca_bootstrap})}
-\item{fit}{MCA fit object (class \code{mca_fit})}
-\item{alsi}{ALSI values (class \code{alsi})}
-\item{K}{Number of dimensions retained based on parallel analysis}
+  \item{pa}{Parallel analysis results (class \code{mca_pa})}
+  \item{boot}{Bootstrap stability results (class \code{mca_bootstrap})}
+  \item{fit}{MCA fit object (class \code{mca_fit})}
+  \item{alsi}{ALSI values (class \code{alsi})}
+  \item{K}{Number of dimensions retained based on parallel analysis}
 }
 \description{
 Runs a complete ALSI analysis including parallel analysis for dimensionality

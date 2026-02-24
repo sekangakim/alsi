@@ -23,20 +23,20 @@ svd_pa(data, B = 2000, q = 0.95, seed = 20260206, graph = TRUE, verbose = TRUE)
 }
 \value{
 S3 object of class \code{svd_pa} containing:
-\item{eig_obs}{Observed eigenvalues}
-\item{eig_adj}{Adjusted eigenvalues (from paran)}
-\item{eig_rand}{Random eigenvalues (threshold)}
-\item{K_star}{Number of dimensions to retain}
-\item{fit}{SVD fit object for downstream cALSI computation}
-\item{method}{Method used ("paran" or "fallback")}
+  \item{eig_obs}{Observed eigenvalues}
+  \item{eig_adj}{Adjusted eigenvalues (from paran)}
+  \item{eig_rand}{Random eigenvalues (threshold)}
+  \item{K_star}{Number of dimensions to retain}
+  \item{fit}{SVD fit object for downstream cALSI computation}
+  \item{method}{Method used ("paran" or "fallback")}
 
 S3 object of class \code{svd_pa} containing:
-\item{eig_obs}{Observed eigenvalues}
-\item{eig_adj}{Adjusted eigenvalues (from paran)}
-\item{eig_rand}{Random eigenvalues (threshold)}
-\item{K_star}{Number of dimensions to retain}
-\item{fit}{SVD fit object for downstream cALSI computation}
-\item{method}{Method used ("paran" or "fallback")}
+  \item{eig_obs}{Observed eigenvalues}
+  \item{eig_adj}{Adjusted eigenvalues (from paran)}
+  \item{eig_rand}{Random eigenvalues (threshold)}
+  \item{K_star}{Number of dimensions to retain}
+  \item{fit}{SVD fit object for downstream cALSI computation}
+  \item{method}{Method used ("paran" or "fallback")}
 }
 \description{
 Uses the paran package (Horn's parallel analysis with Longman-Allen-Chabassol

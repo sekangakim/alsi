@@ -23,26 +23,26 @@ mca_bootstrap(data, vars, K, B = 2000, seed = 20260123, verbose = TRUE)
 }
 \value{
 S3 object of class \code{mca_bootstrap} containing:
-\item{ref}{Reference MCA fit}
-\item{K}{Number of dimensions assessed}
-\item{B}{Number of bootstrap resamples}
-\item{angles}{Matrix of principal angles (B × K)}
-\item{tucker}{Matrix of Tucker congruence coefficients (B × K)}
-\item{angles_summary}{Summary statistics for angles}
-\item{tucker_summary}{Summary statistics for congruence}
+  \item{ref}{Reference MCA fit}
+  \item{K}{Number of dimensions assessed}
+  \item{B}{Number of bootstrap resamples}
+  \item{angles}{Matrix of principal angles (B × K)}
+  \item{tucker}{Matrix of Tucker congruence coefficients (B × K)}
+  \item{angles_summary}{Summary statistics for angles}
+  \item{tucker_summary}{Summary statistics for congruence}
 
 S3 object of class \code{mca_bootstrap} containing:
-\item{ref}{Reference MCA fit object (class \code{mca_fit})}
-\item{K}{Number of dimensions assessed}
-\item{B}{Number of bootstrap resamples performed}
-\item{angles}{Matrix of principal angles in degrees (B x K), measuring
-subspace similarity between bootstrap and reference solutions}
-\item{tucker}{Matrix of Tucker congruence coefficients (B x K), measuring
-dimension-level similarity after Procrustes alignment}
-\item{angles_summary}{Summary statistics (median, 5th, 95th percentiles)
-for principal angles}
-\item{tucker_summary}{Summary statistics (median, 5th, 95th percentiles)
-for Tucker congruence coefficients}
+  \item{ref}{Reference MCA fit object (class \code{mca_fit})}
+  \item{K}{Number of dimensions assessed}
+  \item{B}{Number of bootstrap resamples performed}
+  \item{angles}{Matrix of principal angles in degrees (B x K), measuring
+    subspace similarity between bootstrap and reference solutions}
+  \item{tucker}{Matrix of Tucker congruence coefficients (B x K), measuring
+    dimension-level similarity after Procrustes alignment}
+  \item{angles_summary}{Summary statistics (median, 5th, 95th percentiles) 
+    for principal angles}
+  \item{tucker_summary}{Summary statistics (median, 5th, 95th percentiles) 
+    for Tucker congruence coefficients}
 }
 \description{
 Evaluates reproducibility of retained MCA dimensions via bootstrap resampling.

@@ -19,20 +19,20 @@ alsi(Fmat, eig, K)
 }
 \value{
 S3 object of class \code{alsi} containing:
-\item{alpha}{Numeric vector of ALSI values (length N)}
-\item{w}{Variance weights (length K)}
-\item{alpha_vec}{Aggregated direction vector (sqrt of weights)}
-\item{K}{Number of dimensions used}
+  \item{alpha}{Numeric vector of ALSI values (length N)}
+  \item{w}{Variance weights (length K)}
+  \item{alpha_vec}{Aggregated direction vector (sqrt of weights)}
+  \item{K}{Number of dimensions used}
 
 S3 object of class \code{alsi} containing:
-\item{alpha}{Numeric vector of ALSI values (length N), representing
-each individual's variance-weighted distance from the centroid
-in the retained MCA subspace}
-\item{w}{Variance weights (length K), computed as the proportion of
-retained inertia for each dimension}
-\item{alpha_vec}{Aggregated direction vector (length K), equal to
-sqrt(w), used for projecting category coordinates}
-\item{K}{Number of dimensions used in aggregation}
+  \item{alpha}{Numeric vector of ALSI values (length N), representing
+    each individual's variance-weighted distance from the centroid 
+    in the retained MCA subspace}
+  \item{w}{Variance weights (length K), computed as the proportion of 
+    retained inertia for each dimension}
+  \item{alpha_vec}{Aggregated direction vector (length K), equal to 
+    sqrt(w), used for projecting category coordinates}
+  \item{K}{Number of dimensions used in aggregation}
 }
 \description{
 Calculates ALSI as a variance-weighted Euclidean norm of row principal

@@ -41,21 +41,21 @@ mca_pa(
 }
 \value{
 S3 object of class \code{mca_pa} containing:
-\item{eig_obs}{Observed eigenvalues}
-\item{eig_q}{Reference quantiles from permutation}
-\item{K_star}{Suggested number of dimensions to retain}
-\item{fit}{MCA fit object (class \code{mca_fit})}
-\item{q}{Quantile used}
-\item{B}{Number of permutations}
+  \item{eig_obs}{Observed eigenvalues}
+  \item{eig_q}{Reference quantiles from permutation}
+  \item{K_star}{Suggested number of dimensions to retain}
+  \item{fit}{MCA fit object (class \code{mca_fit})}
+  \item{q}{Quantile used}
+  \item{B}{Number of permutations}
 
 S3 object of class \code{mca_pa} containing:
-\item{eig_obs}{Observed eigenvalues from the MCA of the original data}
-\item{eig_q}{Reference quantiles from permutation distribution}
-\item{eig_perm}{Matrix of permutation eigenvalues (B x dimensions)}
-\item{K_star}{Suggested number of dimensions to retain (where observed > reference)}
-\item{fit}{MCA fit object (class \code{mca_fit}) from original data}
-\item{q}{Quantile threshold used for comparison}
-\item{B}{Number of permutations performed}
+  \item{eig_obs}{Observed eigenvalues from the MCA of the original data}
+  \item{eig_q}{Reference quantiles from permutation distribution}
+  \item{eig_perm}{Matrix of permutation eigenvalues (B x dimensions)}
+  \item{K_star}{Suggested number of dimensions to retain (where observed > reference)}
+  \item{fit}{MCA fit object (class \code{mca_fit}) from original data}
+  \item{q}{Quantile threshold used for comparison}
+  \item{B}{Number of permutations performed}
 }
 \description{
 Compares observed MCA eigenvalues against reference distributions from

@@ -5,18 +5,18 @@
 \alias{alsi-package}
 \title{alsi: Aggregated Latent Space Index for Categorical and Continuous Data}
 \description{
-The alsi package provides stability-validated methods for quantifying
-individual differences in multivariate profile differentiation. It includes
+The alsi package provides stability-validated methods for quantifying 
+individual differences in multivariate profile differentiation. It includes 
 two main variants:
 
 \itemize{
-\item \strong{ALSI} for categorical/binary data via Multiple Correspondence
-Analysis (MCA)
-\item \strong{cALSI} for continuous data via ipsatized Singular Value
-Decomposition (SVD)
+  \item \strong{ALSI} for categorical/binary data via Multiple Correspondence 
+        Analysis (MCA)
+  \item \strong{cALSI} for continuous data via ipsatized Singular Value 
+        Decomposition (SVD)
 }
 
-Both variants implement a three-stage validation pipeline to ensure person-level
+Both variants implement a three-stage validation pipeline to ensure person-level 
 indices reflect replicable latent structure rather than sample-specific noise.
 }
 \section{Main Functions}{
@@ -24,35 +24,35 @@ indices reflect replicable latent structure rather than sample-specific noise.
 
 \strong{For Categorical Data (ALSI):}
 \itemize{
-\item \code{\link{alsi}} - Compute ALSI from MCA coordinates
-\item \code{\link{mca_pa}} - Parallel analysis for dimensionality assessment
-\item \code{\link{mca_bootstrap}} - Bootstrap stability validation
-\item \code{\link{alsi_workflow}} - Complete analysis pipeline
+  \item \code{\link{alsi}} - Compute ALSI from MCA coordinates
+  \item \code{\link{mca_pa}} - Parallel analysis for dimensionality assessment
+  \item \code{\link{mca_bootstrap}} - Bootstrap stability validation
+  \item \code{\link{alsi_workflow}} - Complete analysis pipeline
 }
 
 \strong{For Continuous Data (cALSI):}
 \itemize{
-\item \code{\link{calsi}} - Compute cALSI from SVD coordinates
-\item \code{\link{svd_pa}} - Parallel analysis for continuous data
-\item \code{\link{svd_bootstrap}} - Bootstrap stability validation
-\item \code{\link{calsi_workflow}} - Complete analysis pipeline
+  \item \code{\link{calsi}} - Compute cALSI from SVD coordinates
+  \item \code{\link{svd_pa}} - Parallel analysis for continuous data
+  \item \code{\link{svd_bootstrap}} - Bootstrap stability validation
+  \item \code{\link{calsi_workflow}} - Complete analysis pipeline
 }
 }
 
 \section{The ALSI Framework}{
 
 
-Profile differentiation quantifies how much an individual's scores vary across
-multiple dimensions, independent of overall elevation (mean level). ALSI/cALSI
+Profile differentiation quantifies how much an individual's scores vary across 
+multiple dimensions, independent of overall elevation (mean level). ALSI/cALSI 
 computes this as a variance-weighted Euclidean norm:
 
 \deqn{\alpha_i = \sqrt{\sum_{k=1}^{K} w_k f_{ik}^2}}
 
 where:
 \itemize{
-\item \eqn{f_{ik}} = person i's coordinate on dimension k
-\item \eqn{w_k} = variance weight (proportion of explained variance)
-\item \eqn{K} = number of validated dimensions
+  \item \eqn{f_{ik}} = person i's coordinate on dimension k
+  \item \eqn{w_k} = variance weight (proportion of explained variance)
+  \item \eqn{K} = number of validated dimensions
 }
 }
 
@@ -60,15 +60,15 @@ where:
 
 
 \enumerate{
-\item \strong{Parallel Analysis}: Identifies statistically meaningful
-dimensions (those exceeding chance variation)
-\item \strong{Procrustes Principal Angles}: Assesses space-level stability
-(whether the K-dimensional subspace replicates across bootstrap samples)
-\item \strong{Tucker's Congruence}: Evaluates dimension-level stability
-(whether individual dimensions are replicable)
+  \item \strong{Parallel Analysis}: Identifies statistically meaningful 
+        dimensions (those exceeding chance variation)
+  \item \strong{Procrustes Principal Angles}: Assesses space-level stability 
+        (whether the K-dimensional subspace replicates across bootstrap samples)
+  \item \strong{Tucker's Congruence}: Evaluates dimension-level stability 
+        (whether individual dimensions are replicable)
 }
 
-Only dimensions meeting stability thresholds (typically \eqn{\phi \ge 0.85}
+Only dimensions meeting stability thresholds (typically \eqn{\phi \ge 0.85} 
 and principal angle \eqn{\le 10°}) are included in the aggregated index.
 }
 
@@ -77,8 +77,8 @@ and principal angle \eqn{\le 10°}) are included in the aggregated index.
 
 See the package vignettes for detailed tutorials:
 \itemize{
-\item \code{vignette("alsi-tutorial")} - Categorical data tutorial
-\item \code{vignette("calsi-tutorial")} - Continuous data tutorial
+  \item \code{vignette("alsi-tutorial")} - Categorical data tutorial
+  \item \code{vignette("calsi-tutorial")} - Continuous data tutorial
 }
 
 Quick start examples:
@@ -105,21 +105,21 @@ alpha_i <- results$calsi$alpha
 }
 
 \references{
-Kim, S.-K. (under review). The Aggregated Latent Space Index (ALSI): A
-stability-validated measure of multivariate profile differentiation for
+Kim, S.-K. (under review). The Aggregated Latent Space Index (ALSI): A 
+stability-validated measure of multivariate profile differentiation for 
 categorical data. \emph{Psychological Methods}.
 
-Kim, S.-K. (202X). The Continuous Aggregated Latent Space Index (cALSI):
-Extending stability-validated profile aggregation to continuous data.
+Kim, S.-K. (202X). The Continuous Aggregated Latent Space Index (cALSI): 
+Extending stability-validated profile aggregation to continuous data. 
 \emph{Psychological Methods}.
 
-Horn, J. L. (1965). A rationale and test for the number of factors in factor
+Horn, J. L. (1965). A rationale and test for the number of factors in factor 
 analysis. \emph{Psychometrika}, \emph{30}(2), 179-185.
 
-Lorenzo-Seva, U., & ten Berge, J. M. F. (2006). Tucker's congruence coefficient
+Lorenzo-Seva, U., & ten Berge, J. M. F. (2006). Tucker's congruence coefficient 
 as a meaningful index of factor similarity. \emph{Methodology}, \emph{2}(2), 57-64.
 
-Krzanowski, W. J. (1979). Between-groups comparison of principal components.
+Krzanowski, W. J. (1979). Between-groups comparison of principal components. 
 \emph{Journal of the American Statistical Association}, \emph{74}(367), 703-707.
 }
 \seealso{
@@ -131,7 +131,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Se-Kang Kim \email{sekang.kim@example.edu} (\href{https://orcid.org/0000-0000-0000-0000}{ORCID})
+\strong{Maintainer}: Se-Kang Kim \email{sekangakim@gmail.com} (\href{https://orcid.org/0000-0003-0928-3396}{ORCID})
 
 }
 \keyword{internal}

@@ -1,37 +1,38 @@
 Package: alsi
 Type: Package
 Title: Aggregated Latent Space Index for Categorical and Continuous Data
-Version: 2.0.0
-Date: 2026-02-16
-Authors@R: c(
-    person("Se-Kang", "Kim", email = "sekang.kim@example.edu", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0000-0000-0000"))
-    )
-Description: Provides stability-validated methods for quantifying individual 
-    differences in multivariate profile differentiation. Includes ALSI for 
-    categorical/binary data via Multiple Correspondence Analysis (MCA) and 
-    cALSI for continuous data via ipsatized Singular Value Decomposition (SVD). 
-    Both variants implement a three-stage validation pipeline: parallel analysis, 
-    Procrustes principal angles, and Tucker's congruence coefficients to ensure 
-    person-level indices reflect replicable latent structure.
+Version: 0.2.0
+Date: 2026-02-23
+Authors@R: person("Se-Kang", "Kim", 
+                  email = "sekangakim@gmail.com",
+                  role = c("aut", "cre"),
+                  comment = c(ORCID = "0000-0003-0928-3396"))
+Description: Provides methods for computing profile differentiation indices 
+    from multiple correspondence analysis (MCA) for binary categorical data 
+    and singular value decomposition (SVD) for continuous data. The package 
+    implements the Aggregated Latent Space Index (ALSI) for binary data 
+    (Kim, 2025) and the Continuous ALSI (cALSI) for continuous data. 
+    Both methods include bootstrap-based stability validation using 
+    principal angles and Tucker's congruence coefficients.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
-Depends:
-    R (>= 4.0.0)
+Depends: 
+    R (>= 3.5.0)
 Imports:
+    FactoMineR,
     stats,
     graphics,
     utils
 Suggests:
-    readxl,
-    openxlsx,
     paran,
-    testthat (>= 3.0.0),
+    moments,
+    MASS,
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
+RoxygenNote: 7.3.3
 VignetteBuilder: knitr
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
 URL: https://github.com/sekangakim/alsi
 BugReports: https://github.com/sekangakim/alsi/issues
+
