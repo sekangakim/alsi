@@ -7,24 +7,24 @@
 \format{
 A data frame with 1261 rows and 13 variables:
 \describe{
-  \item{MDD}{Major Depressive Disorder (0 = absent, 1 = present)}
-  \item{DYS}{Dysthymia (0 = absent, 1 = present)}
-  \item{DEP}{Depression (0 = absent, 1 = present)}
-  \item{PTSD}{Post-Traumatic Stress Disorder (0 = absent, 1 = present)}
-  \item{OCD}{Obsessive-Compulsive Disorder (0 = absent, 1 = present)}
-  \item{GAD}{Generalized Anxiety Disorder (0 = absent, 1 = present)}
-  \item{ANX}{Anxiety (0 = absent, 1 = present)}
-  \item{SOPH}{Social Phobia (0 = absent, 1 = present)}
-  \item{ADHD}{Attention-Deficit/Hyperactivity Disorder (0 = absent, 1 = present)}
-  \item{pre_bmi}{Pre-treatment Body Mass Index (numeric)}
-  \item{post_bmi}{Post-treatment Body Mass Index (numeric)}
-  \item{pre_EDI}{Pre-treatment Eating Disorder Inventory score (numeric)}
-  \item{post_EDI}{Post-treatment Eating Disorder Inventory score (numeric)}
+\item{MDD}{Major Depressive Disorder (0 = absent, 1 = present)}
+\item{DYS}{Dysthymia (0 = absent, 1 = present)}
+\item{DEP}{Depression (0 = absent, 1 = present)}
+\item{PTSD}{Post-Traumatic Stress Disorder (0 = absent, 1 = present)}
+\item{OCD}{Obsessive-Compulsive Disorder (0 = absent, 1 = present)}
+\item{GAD}{Generalized Anxiety Disorder (0 = absent, 1 = present)}
+\item{ANX}{Anxiety (0 = absent, 1 = present)}
+\item{SOPH}{Social Phobia (0 = absent, 1 = present)}
+\item{ADHD}{Attention-Deficit/Hyperactivity Disorder (0 = absent, 1 = present)}
+\item{pre_bmi}{Pre-treatment Body Mass Index (numeric)}
+\item{post_bmi}{Post-treatment Body Mass Index (numeric)}
+\item{pre_EDI}{Pre-treatment Eating Disorder Inventory score (numeric)}
+\item{post_EDI}{Post-treatment Eating Disorder Inventory score (numeric)}
 }
 }
 \source{
 Baylor College of Medicine eating disorder treatment program data.
-  Data have been de-identified and anonymized for research purposes.
+Data have been de-identified and anonymized for research purposes.
 }
 \usage{
 ANR2
