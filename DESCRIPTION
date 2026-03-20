@@ -1,0 +1,38 @@
+Package: alsi
+Type: Package
+Title: Aggregated Latent Space Index: Stability-Validated Aggregation
+    across Binary, Ordinal, and Continuous Data
+Version: 0.2.0
+Date: 2026-03-19
+Authors@R: person("Se-Kang", "Kim",
+    email = "se-kang.kim@bcm.edu",
+    role  = c("aut", "cre"),
+    comment = c(ORCID = "0000-0003-0928-3396"))
+Description: Implements stability-validated workflows for constructing a
+    person-level scalar index — the Aggregated Latent Space Index (ALSI) —
+    that summarizes multidimensional association structure across binary,
+    ordinal Likert-type, and continuous multivariate data. For binary data,
+    ALSI is a variance-weighted L2 norm of row principal coordinates from
+    multiple correspondence analysis (MCA). For ordinal data, ALSI is an
+    eigenvalue-weighted composite of person scores from homals alternating
+    least squares (ALS) optimal scaling. For continuous data, the continuous
+    ALSI (cALSI) is derived from ipsatized singular value decomposition
+    (SVD), isolating within-person profile shape. Across all three pipelines,
+    dimensionality is assessed via parallel analysis and subspace stability
+    via bootstrap Procrustes alignment using principal angles and Tucker
+    congruence coefficients; only stable dimensions are retained. Automated
+    workflow functions, visualization tools, and consistent S3 return
+    structures are provided for all three data types.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
+RoxygenNote: 7.3.3
+Imports: homals, stats, graphics, utils
+Suggests: paran, readxl, openxlsx, testthat (>= 3.0.0), knitr,
+    rmarkdown, spelling
+Depends: R (>= 4.1.0)
+Language: en-US
+URL: https://CRAN.R-project.org/package=alsi,
+    https://github.com/sekangakim/alsi
+BugReports: https://github.com/sekangakim/alsi/issues
