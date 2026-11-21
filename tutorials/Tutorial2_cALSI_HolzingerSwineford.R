@@ -1,9 +1,7 @@
-#install.packages("paran")
-#library(paran)
-# No fixed working directory: run from the folder where outputs should be saved.
+# Set the working directory in RStudio before running this script.
 ## ============================================================
 ## TUTORIAL 2: cALSI for Continuous Data
-## Last updated: 13 November 2026 (version 4: sample description and Table 5 values printed)
+## Last updated: 21 November 2026 (R3 final: zero-dimension stop rule)
 ## Holzinger & Swineford (1939) cognitive test battery
 ##
 ## Data source (public; no download or data request needed):
@@ -162,8 +160,7 @@ for (k in seq_len(min(K_pa, ncol(angles_mat), ncol(tucker_mat)))) {
   if (!ok) { K_final <- k - 1; break }
 }
 if (K_final < 1) {
-  cat("\n  WARNING: dimension 1 failed the criteria; inspect the bootstrap diagnostics.\n")
-  K_final <- 1
+  stop("No dimension satisfies both stability criteria; index not computed.")
 }
 cat(sprintf("\n  FINAL DIMENSIONALITY: K* = %d\n\n", K_final))
 
